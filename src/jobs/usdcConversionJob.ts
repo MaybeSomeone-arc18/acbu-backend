@@ -50,6 +50,10 @@ export async function startUsdcConversionConsumer(): Promise<void> {
             await provider.convertCurrency(usdcNum * weightFrac, "USD", currency);
           } catch (e) {
             logger.warn("USDC conversion: FX skip", { currency, error: e });
+            // Do not record reserve history for a failed FX conversion:
+            // crediting the basket currency here would inflate recorded
+            // reserves and desync them from actual holdings.
+            continue;
           }
           await prisma.reserveHistory.create({
             data: {
